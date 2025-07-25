@@ -1,44 +1,131 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>🎬 Film da vedere</title>
+  <title>Scegli un Film</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 2em; }
-    button { padding: 1em 2em; font-size: 1.2em; margin-top: 1em; }
-    #output { margin-top: 2em; font-size: 1.5em; font-weight: bold; color: #333; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-bottom: 30px;
+    }
+    #film-info {
+      margin-top: 20px;
+    }
+    #film-title {
+      font-size: 1.6em;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #film-year {
+      font-size: 1.2em;
+      color: #666;
+    }
+    #film-overview {
+      font-size: 1em;
+      margin: 20px auto;
+      max-width: 600px;
+      color: #444;
+    }
+    #poster {
+      margin-top: 20px;
+      max-width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    #error {
+      color: red;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
-  <h1>🎬 Film da vedere</h1>
-  <button onclick="scegliFilm()">🎲 Scegli Film</button>
-  <div id="output">Clicca per un film casuale!</div>
+
+  <h1>🎬 Scegli un Film Casuale</h1>
+  <button onclick="scegliFilm()">Scegli Film</button>
+
+  <div id="film-info">
+    <div id="film-title"></div>
+    <div id="film-year"></div>
+    <img id="poster" src="" alt="" style="display:none">
+    <div id="film-overview"></div>
+    <div id="error"></div>
+  </div>
 
   <script>
-    let lista = [];
+    let filmList = [];
 
-    fetch("film_list.json")
-      .then(response => {
-        if (!response.ok) throw new Error("Errore nel caricamento JSON");
-        return response.json();
-      })
+    // Carica i film dal file JSON
+    fetch('film_list.json')
+      .then(response => response.json())
       .then(data => {
-        lista = data.film.filter(f => f); // rimuove eventuali stringhe vuote/null
-      })
-      .catch(error => {
-        document.getElementById("output").innerText = "Errore nel caricamento lista.";
-        console.error(error);
+        filmList = data;
       });
 
     function scegliFilm() {
-      if (lista.length === 0) {
-        document.getElementById("output").innerText = "Lista vuota.";
+      if (filmList.length === 0) {
+        document.getElementById("film-title").innerText = "Lista non caricata.";
         return;
       }
-      const film = lista[Math.floor(Math.random() * lista.length)];
-      document.getElementById("output").innerText = film;
+
+      const titolo = filmList[Math.floor(Math.random() * filmList.length)];
+      cercaFilm(titolo);
+    }
+
+    function cercaFilm(titolo) {
+      const apiKey = '0fbd4bc7c52e5d236fb9875276bb2253'; // Puoi sostituirla con la tua
+      const url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(titolo)}&language=it-IT`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.results && data.results.length > 0) {
+            const film = data.results[0];
+            const posterPath = film.poster_path ? `https://image.tmdb.org/t/p/w500${film.poster_path}` : '';
+            const anno = film.release_date ? film.release_date.substring(0, 4) : 'N/D';
+            const overview = film.overview || 'Trama non disponibile.';
+
+            document.getElementById("film-title").innerText = film.title;
+            document.getElementById("film-year").innerText = `Anno: ${anno}`;
+            document.getElementById("film-overview").innerText = overview;
+
+            const poster = document.getElementById("poster");
+            if (posterPath) {
+              poster.src = posterPath;
+              poster.style.display = "block";
+              poster.alt = film.title;
+            } else {
+              poster.style.display = "none";
+            }
+
+            document.getElementById("error").innerText = "";
+          } else {
+            mostraErrore("Nessun risultato trovato.");
+          }
+        })
+        .catch(() => {
+          mostraErrore("Errore nella ricerca del film.");
+        });
+    }
+
+    function mostraErrore(msg) {
+      document.getElementById("film-title").innerText = "";
+      document.getElementById("film-year").innerText = "";
+      document.getElementById("film-overview").innerText = "";
+      document.getElementById("poster").style.display = "none";
+      document.getElementById("error").innerText = msg;
     }
   </script>
+
 </body>
 </html>
