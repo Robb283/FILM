@@ -6,139 +6,63 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      text-align: center;
       background-color: #f9f9f9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 2em;
     }
-
-    h1 {
-      color: #333;
-      font-size: 2em;
-    }
-
+    h1 { font-size: 2em; }
     button {
-      font-size: 1.2em;
       padding: 10px 20px;
-      margin: 1em 0;
+      font-size: 1.2em;
       cursor: pointer;
     }
-
-    #film-info {
-      text-align: center;
-      max-width: 600px;
-    }
-
-    #film-title {
-      font-size: 1.5em;
-      font-weight: bold;
-      margin-top: 0.5em;
-    }
-
-    #film-year {
-      font-size: 1.1em;
-      color: #666;
-      margin-bottom: 0.5em;
-    }
-
-    #film-overview {
-      font-size: 1em;
-      margin: 1em 0;
-      color: #444;
-    }
-
-    #poster {
-      max-width: 300px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      margin: 1em auto;
-    }
-
-    #error {
-      color: red;
-      margin-top: 15px;
-    }
+    #poster { max-width: 300px; margin: 1em auto; display: none; }
+    #film-title { font-weight: bold; font-size: 1.5em; }
+    #film-year { color: #666; margin-bottom: 0.5em; }
+    #film-overview { margin: 1em auto; max-width: 600px; }
+    #error { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
-
   <h1>🎬 Scegli un Film Casuale</h1>
   <button onclick="scegliFilm()">Scegli Film</button>
-
-  <div id="film-info">
-    <div id="film-title"></div>
-    <div id="film-year"></div>
-    <img id="poster" src="" alt="" style="display:none">
-    <div id="film-overview"></div>
-    <div id="error"></div>
-  </div>
+  <div id="film-title"></div>
+  <div id="film-year"></div>
+  <img id="poster" src="" alt="Poster">
+  <div id="film-overview"></div>
+  <div id="error"></div>
 
   <script>
-    let filmList = [];
-
-    // Carica la lista dei film
-    fetch('film_list.json')
+    let films = [];
+    fetch("film_list.json")
       .then(response => response.json())
-      .then(data => {
-        filmList = data;
-      })
-      .catch(() => {
-        document.getElementById("error").innerText = "Errore nel caricamento della lista.";
-      });
+      .then(data => { films = data; })
+      .catch(() => { document.getElementById("error").innerText = "Errore caricamento lista film"; });
 
     function scegliFilm() {
-      if (filmList.length === 0) {
-        document.getElementById("error").innerText = "La lista è vuota o non è stata caricata.";
-        return;
-      }
-
-      const titolo = filmList[Math.floor(Math.random() * filmList.length)];
-      cercaFilm(titolo);
+      if (films.length === 0) return;
+      const film = films[Math.floor(Math.random() * films.length)];
+      caricaFilm(film.tmdb_id);
     }
 
-    function cercaFilm(titolo) {
-  const url = `https://movie-database-alternative.p.rapidapi.com/?s=${encodeURIComponent(titolo)}&r=json`;
-  
-  fetch(url, {
-    method: 'GET',
-    headers: {
-      'X-RapidAPI-Key': '772f6594d69dd39cb6cf2fe95b46b8ce',   // <-- inserisci la tua!
-      'X-RapidAPI-Host': 'movie-database-alternative.p.rapidapi.com'
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data && data.Search && data.Search.length > 0) {
-      const film = data.Search[0];
+    function caricaFilm(id) {
+      const apiKey = '772f6594d69dd39cbc6cf2fe95b46b8ce';
+      const url = `https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=it-IT`;
 
-      document.getElementById("film-title").innerText = film.Title;
-      document.getElementById("film-year").innerText = `Anno: ${film.Year}`;
-      document.getElementById("film-overview").innerText = "";
-      
-      const poster = document.getElementById("poster");
-      poster.src = film.Poster;
-      poster.alt = film.Title;
-      poster.style.display = "block";
-
-      document.getElementById("error").innerText = "";
-    } else {
-      mostraErrore("Film non trovato.");
-    }
-  })
-  .catch(() => {
-    mostraErrore("Errore nella ricerca del film.");
-  });
-}
-
-    function mostraErrore(msg) {
-      document.getElementById("film-title").innerText = "";
-      document.getElementById("film-year").innerText = "";
-      document.getElementById("film-overview").innerText = "";
-      document.getElementById("poster").style.display = "none";
-      document.getElementById("error").innerText = msg;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("film-title").innerText = data.title;
+          document.getElementById("film-year").innerText = "Anno: " + (data.release_date ? data.release_date.slice(0, 4) : '');
+          document.getElementById("film-overview").innerText = data.overview;
+          document.getElementById("poster").src = "https://image.tmdb.org/t/p/w500" + data.poster_path;
+          document.getElementById("poster").style.display = "block";
+          document.getElementById("error").innerText = "";
+        })
+        .catch(() => {
+          document.getElementById("error").innerText = "Errore nel recupero dati film.";
+        });
     }
   </script>
-
 </body>
 </html>
