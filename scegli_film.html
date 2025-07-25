@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Scegli un Film</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; background: #f2f2f2; }
+    #film { font-size: 24px; margin-top: 20px; color: #333; }
+    button { font-size: 20px; padding: 12px 24px; border: none; background: #4CAF50; color: white; border-radius: 8px; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+  </style>
+</head>
+<body>
+  <h1>🎬 Scegli un Film</h1>
+  <button onclick="scegliFilm()">Scegli Film</button>
+  <div id="film">Clicca sul pulsante per iniziare</div>
+
+  <script>
+    let filmList = [];
+
+    async function caricaFilm() {
+      const response = await fetch('film_list.json');
+      filmList = await response.json();
+    }
+
+    function scegliFilm() {
+      if (filmList.length === 0) {
+        document.getElementById('film').innerText = "Lista non caricata.";
+        return;
+      }
+      const randomIndex = Math.floor(Math.random() * filmList.length);
+      document.getElementById('film').innerText = filmList[randomIndex];
+    }
+
+    // Carica la lista quando la pagina è pronta
+    window.onload = caricaFilm;
+  </script>
+</body>
+</html>
