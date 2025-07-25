@@ -98,37 +98,38 @@
     }
 
     function cercaFilm(titolo) {
-      const apiKey = '772f6594d69dd39cbc6cf2fe95b46b8ce';
-      const url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(titolo)}&language=it-IT`;
-
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          if (data.results && data.results.length > 0) {
-            const film = data.results[0];
-            document.getElementById("film-title").innerText = film.title || titolo;
-            document.getElementById("film-year").innerText = film.release_date ? `Anno: ${film.release_date.substring(0, 4)}` : '';
-            document.getElementById("film-overview").innerText = film.overview || 'Trama non disponibile.';
-
-            if (film.poster_path) {
-              const posterUrl = `https://image.tmdb.org/t/p/w500${film.poster_path}`;
-              const poster = document.getElementById("poster");
-              poster.src = posterUrl;
-              poster.alt = film.title;
-              poster.style.display = "block";
-            } else {
-              document.getElementById("poster").style.display = "none";
-            }
-
-            document.getElementById("error").innerText = "";
-          } else {
-            mostraErrore("Film non trovato.");
-          }
-        })
-        .catch(() => {
-          mostraErrore("Errore nella ricerca del film.");
-        });
+  const url = `https://movie-database-alternative.p.rapidapi.com/?s=${encodeURIComponent(titolo)}&r=json`;
+  
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Key': '772f6594d69dd39cb6cf2fe95b46b8ce',   // <-- inserisci la tua!
+      'X-RapidAPI-Host': 'movie-database-alternative.p.rapidapi.com'
     }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data && data.Search && data.Search.length > 0) {
+      const film = data.Search[0];
+
+      document.getElementById("film-title").innerText = film.Title;
+      document.getElementById("film-year").innerText = `Anno: ${film.Year}`;
+      document.getElementById("film-overview").innerText = "";
+      
+      const poster = document.getElementById("poster");
+      poster.src = film.Poster;
+      poster.alt = film.Title;
+      poster.style.display = "block";
+
+      document.getElementById("error").innerText = "";
+    } else {
+      mostraErrore("Film non trovato.");
+    }
+  })
+  .catch(() => {
+    mostraErrore("Errore nella ricerca del film.");
+  });
+}
 
     function mostraErrore(msg) {
       document.getElementById("film-title").innerText = "";
